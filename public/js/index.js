@@ -27,11 +27,11 @@
 
   // TODO: Input the proper values for the scales
   var xScale = d3.scale.ordinal().rangeRoundBands([0, innerWidth], 0);
-  var yScale = d3.scale.linear().range([0, height]);
+  var yScale = d3.scale.linear().range([0, innerHeight]);
 
   // Define the chart
   var chart = d3
-                .select(".chart")
+                .select("#chart")
                 .append("svg")
                 .attr("width", width + margin.right + margin.left)
                 .attr("height", height + margin.top + margin.bottom)
@@ -56,8 +56,8 @@
     .attr("class", "bar")
     .attr("x", function(d, i) { return ((innerWidth / data.length)*i) + 5; })
     .attr("width", (innerWidth / data.length) - 10)
-    .attr("y", function(d) { return height - (height*(d / range)); })
-    .attr("height", function(d) { return height*(d / range); });
+    .attr("y", function(d) { return innerHeight - (innerHeight*(d / range)); })
+    .attr("height", function(d) { return innerHeight*(d / range); });
 
   // Orient the x and y axis
   var xAxis = d3.svg.axis().scale(xScale).orient("bottom");
@@ -66,7 +66,7 @@
   // TODO: Append X axis
   chart
     .append("g")
-      .attr("transform", "translate(" + 0 + "," + height + ")")
+      .attr("transform", "translate(" + 0 + "," + innerHeight + ")")
       .call(xAxis)
     .selectAll("text")
       .attr("transform",
@@ -90,8 +90,82 @@
       console.log(err);
       return;
     }
-    
-    console.log("Data", data);
+
+    var sortedData = data.sort(function(a, b) {
+      return a.gender.charCodeAt(0) - b.gender.charCodeAt(0);
+    });
+
+    updateDelphiChart(sortedData);
   });
 
 })(d3);
+
+function updateDelphiChart (data) {
+  var range = d3.max( data.map(function(d){ return d.number_of_respondents; }) ) + 1000;
+
+  // Defining the margins and chart size
+  // See margin conventions for more information
+  var margin = {top: 20, right: 10, bottom: 100, left: 60},
+      width = 960 - margin.right - margin.left,
+      height = 500 - margin.top - margin.bottom;
+
+  var innerWidth  = width  - margin.left - margin.right;
+  var innerHeight = height - margin.top  - margin.bottom;
+
+  // TODO: Input the proper values for the scales
+  var xScale = d3.scale.ordinal().rangeRoundBands([0, innerWidth], 0);
+  var yScale = d3.scale.linear().range([0, innerHeight]);
+
+  // Define the chart
+  var chart = d3
+                .select("#chart2")
+                .append("svg")
+                .attr("width", width + margin.right + margin.left)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" +  margin.left + "," + margin.right + ")");
+
+  // Render the chart
+  xScale.domain( data.map(function (d){ return d.gender; }) );
+
+  // TODO: Fix the yScale domain to scale with any ratings range
+  yScale.domain([range,0]);
+  
+
+  // Note all these values are hard coded numbers
+  // TODO:
+  // 1. Consume the taco data
+  // 2. Update the x, y, width, and height attributes to appropriate reflect this
+  chart
+    .selectAll(".bar")
+    .data(data.map(function(d){ return d.number_of_respondents; }))
+    .enter().append("rect")
+    .attr("class", "bar")
+    .attr("x", function(d, i) { return ((innerWidth / data.length)*i) + 5; })
+    .attr("width", (innerWidth / data.length) - 10)
+    .attr("y", function(d) { return innerHeight - (innerHeight*(d / range)); })
+    .attr("height", function(d) { return innerHeight*(d / range); });
+
+  // Orient the x and y axis
+  var xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+  var yAxis = d3.svg.axis().scale(yScale).orient("left");
+
+  // TODO: Append X axis
+  chart
+    .append("g")
+      .attr("transform", "translate(" + 0 + "," + innerHeight + ")")
+      .call(xAxis)
+    .selectAll("text")
+      .attr("transform",
+        "translate(" + 0 + "," + 10 + ")" +
+        " " +
+        "rotate(" + -45 + ")"
+      )
+      .style("text-anchor", "end");
+
+
+  // TODO: Append Y axis
+  chart
+    .append("g")
+      .call(yAxis);
+}

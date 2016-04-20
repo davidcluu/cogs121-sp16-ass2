@@ -1,9 +1,20 @@
-.chart {
+#chart {
   display: block;
   margin-left: auto;
   margin-right: auto;
 }
 
-.chart rect {
+#chart rect {
   fill: steelblue;
 }
+
+#chart2 {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#chart2 rect {
+  fill: red;
+}
+

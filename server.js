@@ -15,6 +15,13 @@ dotenv.load();
 //connect to database
 var conString = process.env.DATABASE_CONNECTION_URL;
 
+var client = new pg.Client(conString);
+client.connect(function(err) {
+  if(err) {
+    console.error("ERROR: Could not connect to database");
+  }
+});
+
 //Configures the Template engine
 app.engine('html', handlebars({ defaultLayout: 'layout', extname: '.html' }));
 app.set("view engine", "html");
@@ -35,7 +42,6 @@ app.get('/', function(req, res){
 });
 
 app.get('/delphidata', function (req, res) {
-  // TODO
   // Connect to the DELPHI Database and return the proper information
   // that will be displayed on the D3 visualization
   // Table: Smoking Prevalance in Adults
@@ -43,10 +49,29 @@ app.get('/delphidata', function (req, res) {
   // for each gender. 
   // Display that data using D3 with gender on the x-axis and 
   // total respondents on the y-axis.
-  return { delphidata: "No data present." }
+
+  var query = [
+    "SELECT gender, number_of_respondents",
+    "FROM cogs121_16_raw.cdph_smoking_prevalence_in_adults_1984_2013 AS c",
+    "WHERE c.year = 2003"
+  ];
+
+  client.query(queryize(query), function(err, result) {
+    if(err) {
+      res.sendStatus(500);
+    }
+
+    res.json(result.rows);
+  });
+
+  function queryize (queryArr) {
+    return queryArr
+      .map((s) => s + " ")
+      .reduce((p,c) => p+c)
+  }
 });
 
 
 http.createServer(app).listen(app.get('port'), function() {
-    console.log('Express server listening on port ' + app.get('port'));
+  console.log('Express server listening on port ' + app.get('port'));
 });
